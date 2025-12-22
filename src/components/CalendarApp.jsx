@@ -1,8 +1,14 @@
 import { useState } from "react";
 
-// Komponentti: CalendarApp
-// Tämä tiedosto näyttää yksinkertaisen kalenterin ja tapahtumien listausalueen.
-// Kommentit ovat suomeksi ja selittävät muuttujia ja osioita.
+/*
+    CalendarApp.jsx
+    --------------------
+    Pääkomponentti, joka näyttää kuukausikalenterin, viikonpäivät ja
+    tapahtumalistan. Sisältää logiikan päivien valintaan, tapahtuman
+    lisäämiseen, muokkaamiseen ja poistamiseen.
+
+    Kommentit tiedostossa selittävät tilamuuttujia ja funktioita suomeksi.
+*/
 const CalendarApp = () => {
     // Viikonpäivien lyhenteet (suomeksi) ja kuukaudet taulukossa
     const daysOfWeek = ['Ma', 'Ti', 'Ke', 'To', 'Pe', 'La', 'Su'];
@@ -21,6 +27,14 @@ const CalendarApp = () => {
     const [eventText, setEventText] = useState('');
     const [editingEvent, setEditingEvent] = useState(null);
 
+    // Komponentin tila: valittu kuukausi/vuosi/päivä ja tapahtumiin liittyvät arvot
+    // - `currentMonth` / `currentYear`: mitä kuukautta näytetään
+    // - `selectedDate`: käyttäjän valitsema päivämäärä tapahtuman lisäystä varten
+    // - `showEventPopup`: näyttääkö tapahtuman lisäys-/muokkaus-ikkunan
+    // - `events`: sovelluksen tapahtumalista (taulukko)
+    // - `eventTime` / `eventText`: lomakekenttien sisältö
+    // - `editingEvent`: jos muokataan olemassa olevaa tapahtumaa, sen tiedot tässä
+
     // Lasketaan valitun kuukauden päivämäärä ja kuukauden ensimmäisen päivän viikonpäivä
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const firstDayMonth = new Date(currentYear, currentMonth, 1).getDay();
@@ -36,6 +50,7 @@ const CalendarApp = () => {
         setCurrentYear(prevYear => (currentMonth === 0 ? prevYear - 1 : prevYear));
     }
 
+    // Navigointifunktiot: siirtyminen edelliseen / seuraavaan kuukauteen
     const nextMonth = () => {
         setCurrentMonth(prevMonth => (prevMonth === 11 ? 0 : prevMonth + 1));
         setCurrentYear(prevYear => (currentMonth === 11 ? prevYear + 1 : prevYear));
@@ -54,6 +69,7 @@ const CalendarApp = () => {
         }
     }
 
+    // Apufunktio: tarkistaa ovatko kaksi päivämäärää sama päivä
     const isSameDay = (date1, date2) => {
         return (
             date1.getFullYear() === date2.getFullYear() &&
@@ -99,11 +115,22 @@ const CalendarApp = () => {
         setShowEventPopup(true);
     };
 
+    // Avaa olemassa olevan tapahtuman muokkausta varten ja täyttää lomakkeen
     const handleDeleteEvent = (eventId) => {
         const updatedEvents = events.filter((event) => event.id !== eventId);
         setEvents(updatedEvents);
     }
 
+    // Poistaa tapahtuman ID:llä
+    const handleTimeChange = (e) => {
+        const { name, value } = e.target;
+        setEventTime((prevTime) => ({
+            ...prevTime,
+            [name]: value.padStart(2, '0')
+        }));
+    }
+
+    // Päivittää tunnit/minuutit lomakekentästä. Täyttää tarvittaessa 0:lla etunollat.
   return <div className="calendar-app">
     {/* Vasemman puolen kalenteri */}
     <div className="calendar">
@@ -147,10 +174,10 @@ const CalendarApp = () => {
             <div className="time-input">
                 <div className="event-popup-time">Aika</div>
                 {/* Tunnit ja minuutit: numeroinputit */}
-                <input type="number" name="hours" min={0} max={24} className="hours" value={eventTime.hours} onChange={(e) => 
-                setEventTime({...eventTime, hours: e.target.value})} />
-                <input type="number" name="minutes" min={0} max={60} className="minutes" value={eventTime.minutes} onChange={(e) =>
-                setEventTime({...eventTime, minutes: e.target.value})}/>
+                <input type="number" name="hours" min={0} max={24} className="hours" value={eventTime.hours} 
+                onChange={handleTimeChange} />
+                <input type="number" name="minutes" min={0} max={60} className="minutes" value={eventTime.minutes} 
+                onChange={handleTimeChange}/>
             </div>
             {/* Tapahtuman teksti (max 60 merkkiä) */}
             <textarea placeholder="Kirjoita tapahtuman teksti (enintään 60 merkkiä)" value={eventText} 

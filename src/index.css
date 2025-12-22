@@ -1,28 +1,28 @@
+/*
+  index.css
+  --------------------
+  Globaalit tyylit sovellukselle.
+  - Tuodaan fontit
+  - Nollataan perusmarginaalit/pehmennetään boksi-mallia
+  - Määritellään perusfonttikoko rem-laskentaa varten
+  - `container` pitää sovelluksen keskitettynä ikkunassa
+*/
+
 /* Tuodaan Google-fontit: Bebas Neue ja Comfortaa */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Comfortaa:wght@300..700&display=swap');
 
-/* Perusnollaus: poistaa oletusmarginaalit ja asettaa fontin */
+/* Reset / perusasetukset: poistaa selaimen oletusmarginaalit */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     outline: none;
-    font-family: 'Comfortaa', sans-serif;
+    font-family: 'Comfortaa', sans-serif; /* käytetään Comfortaa-globaalia fonttia */
 }
 
-/* Asetetaan perusyksikkö (62.5% = 10px oletus 16px) jotta rem-laskenta on helpompaa */
+/* Perusyksikön asetus: 62.5% tarkoittaa 1rem = 10px (helpottaa laskemista) */
 html {
     font-size: 62.5%;
-}
-
-/* Täytetään koko korkeus body:lle */
-html, body {
-    height: 100%;
-}
-
-/* Sovelluksen taustaväri */
-body {
-    background-color: #2c3542;
 }
 
 /* Keskitetty kontaineri, joka pitää kalenterin keskellä ikkunaa */
@@ -32,5 +32,13 @@ body {
     background-color: #2c3542;
     display: grid;
     place-items: center;
-    perspective: 100rem;
+    overflow: hidden;
+    perspective: 100rem; /* 3D-efektien perspektiiviä varten */
+}
+
+/* Pienemmillä näytöillä säädetään perusyksikköä hieman pienemmäksi */
+@media (max-width: 500px) {
+    html {
+        font-size: 55%;
+    }
 }
