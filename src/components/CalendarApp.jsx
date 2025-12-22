@@ -15,7 +15,11 @@ const CalendarApp = () => {
     const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
     const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
     const [selectedDate, setSelectedDate] = useState(currentDate);
-    const [showEventPopup, setShowEventPopup] = useState(false);    
+    const [showEventPopup, setShowEventPopup] = useState(false);
+    const [events, setEvents] = useState([]);
+    const [eventTime, setEventTime] = useState({ hours: '', minutes: '' });
+    const [eventText, setEventText] = useState('');
+    const [editingEvent, setEditingEvent] = useState(null);
 
     // Lasketaan valitun kuukauden päivämäärä ja kuukauden ensimmäisen päivän viikonpäivä
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -41,10 +45,63 @@ const CalendarApp = () => {
         const clickedDate = new Date(currentYear, currentMonth, day);
         const today = new Date();
 
-        if(clickedDate >= today) {
+        if(clickedDate >= today || isSameDay(clickedDate, today)) {
             setSelectedDate(clickedDate);
             setShowEventPopup(true);
+            setEventTime({ hours: '00', minutes: '00' });
+            setEventText('');
+            setEditingEvent(null);
         }
+    }
+
+    const isSameDay = (date1, date2) => {
+        return (
+            date1.getFullYear() === date2.getFullYear() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate()
+        );
+    }
+
+    const handleEventSubmit = () => {
+        const newEvent = {
+            id: editingEvent ? editingEvent.id : Date.now(),
+            date: selectedDate,
+            time: `${eventTime.hours.padStart(2, '0')}:${eventTime.minutes.padStart(2, '0')}`,
+            text: eventText
+        }
+
+        let updatedEvents = [...events];
+        if(editingEvent) {
+            updatedEvents = updatedEvents.map((event) => 
+            event.id === editingEvent.id ? newEvent : event
+            )
+        } else {
+            updatedEvents.push(newEvent);
+        }
+
+        updatedEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        setEvents(updatedEvents);
+        setEventTime({ hours: '00', minutes: '00' });
+        setEventText('');
+        setShowEventPopup(false);
+        setEditingEvent(null);
+    }
+
+    const handleEventEdit = (event) => {
+        setSelectedDate(new Date(event.date))
+        setEventTime({
+            hours: event.time.split(':')[0],
+            minutes: event.time.split(':')[1]
+        });
+        setEventText(event.text);
+        setEditingEvent(event);
+        setShowEventPopup(true);
+    };
+
+    const handleDeleteEvent = (eventId) => {
+        const updatedEvents = events.filter((event) => event.id !== eventId);
+        setEvents(updatedEvents);
     }
 
   return <div className="calendar-app">
@@ -90,29 +147,42 @@ const CalendarApp = () => {
             <div className="time-input">
                 <div className="event-popup-time">Aika</div>
                 {/* Tunnit ja minuutit: numeroinputit */}
-                <input type="number" name="hours" min={0} max={24} className="hours"/>
-                <input type="number" name="minutes" min={0} max={60} className="minutes"/>
+                <input type="number" name="hours" min={0} max={24} className="hours" value={eventTime.hours} onChange={(e) => 
+                setEventTime({...eventTime, hours: e.target.value})} />
+                <input type="number" name="minutes" min={0} max={60} className="minutes" value={eventTime.minutes} onChange={(e) =>
+                setEventTime({...eventTime, minutes: e.target.value})}/>
             </div>
             {/* Tapahtuman teksti (max 60 merkkiä) */}
-            <textarea placeholder="Kirjoita tapahtuman teksti (enintään 60 merkkiä)"></textarea>
-            <button className="event-popup-btn">Lisää tapahtuma</button>
+            <textarea placeholder="Kirjoita tapahtuman teksti (enintään 60 merkkiä)" value={eventText} 
+            onChange={(e) => {
+                if(e.target.value.length <= 60) {
+                    setEventText(e.target.value);
+                }
+            }}>
+            </textarea>
+            <button className="event-popup-btn" onClick={handleEventSubmit}>
+            {editingEvent ? "Tallenna muutokset" : "Lisää tapahtuma"}</button>
             <button className="close-event-popup" onClick={() => setShowEventPopup(false)}>
                 <i className='bx bx-x'></i>
             </button>
         </div>
         )}
         {/* Esimerkki tapahtumasta näkyvillä listassa */}
-        <div className="event">
+        {events.map((event, index) => (
+        <div className="event" key={index}>
             <div className="event-date-wrapper">
-                <div className="event-date">24 Joulukuu, 2025</div>
-                <div className="event-time">10:00</div>
+                <div className="event-date">{`${
+                monthsOfYear[event.date.getMonth()]
+                } ${event.date.getDate()}, ${event.date.getFullYear()}`}</div>
+                <div className="event-time">{event.time}</div>
             </div>
-            <div className="event-text">Tapaaminen Joulupukin kanssa</div>
+            <div className="event-text">{event.text}</div>
             <div className="event-buttons">
-                <i className="bx bxs-edit-alt"></i>
-                <i className="bx bxs-message-alt-x"></i>
+                <i className="bx bxs-edit-alt" onClick={() => handleEventEdit(event)}></i>
+                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
             </div>
         </div>
+        ))}
     </div>
   </div>
 }
