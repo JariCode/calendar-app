@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 /*
     CalendarApp.jsx
@@ -130,6 +130,65 @@ const CalendarApp = () => {
         }));
     }
 
+    // --- Persistence: load from Electron IPC or localStorage, save debounced ---
+    const saveTimer = useRef(null);
+
+    useEffect(() => {
+        const load = async () => {
+                try {
+                    if (window?.electronAPI?.loadEvents) {
+                        const loaded = await window.electronAPI.loadEvents();
+                        if (Array.isArray(loaded)) {
+                            const parsed = loaded.map(e => ({ ...e, date: e.date ? new Date(e.date) : new Date() }));
+                            setEvents(parsed);
+                            return;
+                        }
+                    }
+            } catch (err) {
+                console.error('Electron load failed:', err);
+            }
+
+            // Fallback: localStorage
+            try {
+                const raw = localStorage.getItem('calendarEvents');
+                if (raw) {
+                    const parsed = JSON.parse(raw).map(e => ({ ...e, date: new Date(e.date) }));
+                    setEvents(parsed);
+                }
+            } catch (err) {
+                console.error('localStorage load failed:', err);
+            }
+        }
+        load();
+    }, []);
+
+    useEffect(() => {
+        // always save to localStorage as a fallback/persistence for web
+        try {
+            const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+            localStorage.setItem('calendarEvents', JSON.stringify(serializable));
+        } catch (err) {
+            console.error('localStorage save failed:', err);
+        }
+
+        // If Electron available, save via IPC debounced
+        if (!window?.electronAPI?.saveEvents) return;
+
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(async () => {
+            try {
+                const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+                await window.electronAPI.saveEvents(serializable);
+            } catch (err) {
+                console.error('Electron save failed:', err);
+            }
+        }, 700);
+
+        return () => {
+            if (saveTimer.current) clearTimeout(saveTimer.current);
+        }
+    }, [events]);
+
     // Päivittää tunnit/minuutit lomakekentästä. Täyttää tarvittaessa 0:lla etunollat.
   return <div className="calendar-app">
     {/* Vasemman puolen kalenteri */}
@@ -168,7 +227,7 @@ const CalendarApp = () => {
 
     {/* Oikean puolen tapahtuma-alue */}
     <div className="events">
-        {/* Tapahtuman lisäyspopup (piilotettu CSS:llä oletuksena) */}
+        {/* Tapahtuman lisäyspopup */}
         {showEventPopup && (
         <div className="event-popup">
             <div className="time-input">

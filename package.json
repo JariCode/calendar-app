@@ -3,13 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "main.cjs",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx concurrently \"vite\" \"npx wait-on http://localhost:5173 && npx electron .\"",
     "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "dist": "electron-builder"
   },
   "dependencies": {
+    "boxicons": "^2.1.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -18,10 +21,41 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^8.2.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^24.13.3",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.example.react-desktop",
+    "productName": "Kalenteri",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "main.cjs",
+      "preload.js"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": false,
+      "selectPerMachineByDefault": false
+    }
   }
 }

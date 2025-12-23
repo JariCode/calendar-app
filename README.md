@@ -15,3 +15,40 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
 "# calendar-app" 
+
+## Rakentaminen Windows-asennettavaksi (Electron)
+
+Ohjeet asennettavan Windows-installerin luomiseen projektista:
+
+1. Asenna riippuvuudet:
+
+```bash
+npm install
+```
+
+2. Kehitysympäristössä aja (avaa Vite + Electron):
+
+```bash
+npm run dev
+```
+
+3. Rakenna tuotantoversio ja tee asennin:
+
+```bash
+npm run build
+npm run dist
+```
+
+Huomioita ja vianetsintä:
+- Jos electron-builder pysähtyy tai antaa virheen liittyen symlinkien luomiseen (Windows), kokeile ajaa build komentorivi ylläpitäjänä (Run as Administrator) tai ota Windowsin Developer Mode käyttöön.
+- Jos näkyy virheitä, joissa `winCodeSign` arkistoja purettaessa ei voi luoda symlinkkejä, poista välimuisti ja yritä uudelleen:
+
+```powershell
+rd /s /q %LocalAppData%\electron-builder-cache
+npm run dist
+```
+
+- electron-builder voi ladata työkaluja allekirjoitusta varten; jos et allekirjoita sovellusta, varmista, ettei konfiguraatiossa ole julkaisuasetuksia, jotka vaatisivat signauksen.
+
+Kun tarvitset apua build-lokien kanssa, liitä virheilmoitus tähän repositorioon (tai lähetä se minulle), niin autan tulkitsemaan ja korjaamaan ongelman.
+
