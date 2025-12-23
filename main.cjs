@@ -4,6 +4,8 @@ const isDev = !app.isPackaged;
 const fs = require('fs').promises;
 const fsSync = require('fs');
 
+let isQuitting = false;
+
 function getEventsPath() {
   return path.join(app.getPath('userData'), 'events.json');
 }
@@ -29,8 +31,8 @@ ipcMain.handle('save-events', async (event, events) => {
     if (!Array.isArray(evts)) return false;
     for (const it of evts) {
       if (it == null || typeof it !== 'object') return false;
-      if (!('date' in it) || !('title' in it)) return false;
-      if (typeof it.title !== 'string') return false;
+      if (!('date' in it) || !('text' in it)) return false;
+      if (typeof it.text !== 'string') return false;
       if (typeof it.date !== 'string') return false;
     }
     return true;
@@ -53,18 +55,14 @@ ipcMain.handle('save-events', async (event, events) => {
   }
 });
 
-// Synchronous save handler for use during renderer unload/close
-ipcMain.on('save-events-sync', (event, events) => {
-  try {
-    const p = getEventsPath();
-    fsSync.mkdirSync(path.dirname(p), { recursive: true });
-    const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
-    fsSync.writeFileSync(p, JSON.stringify(serializable), 'utf8');
-    event.returnValue = { ok: true };
-  } catch (err) {
-    console.error('save-events-sync failed:', err);
-    try { event.returnValue = { ok: false, error: String(err) }; } catch (e) {}
-  }
+// NOTE: synchronous IPC handler has been removed to avoid blocking the
+// main thread. Instead the app uses an orderly shutdown handshake:
+// main sends 'prepare-to-close' to renderer; renderer saves and
+// replies with 'renderer-ready'. Below we listen for that reply when
+// initiating window close.
+
+ipcMain.on('renderer-ready', (event) => {
+  // Intentionally empty: listeners are attached dynamically during close.
 });
 
 function createWindow() {
@@ -85,6 +83,39 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
+
+  // Graceful shutdown handshake: ask renderer to persist state before closing.
+  win.on('close', (e) => {
+    if (isQuitting) return; // already proceeding to close
+    e.preventDefault();
+    // Send prepare signal to renderer
+    try {
+      win.webContents.send('prepare-to-close');
+    } catch (err) {
+      // If we can't send, allow close to proceed
+      isQuitting = true;
+      win.destroy();
+      return;
+    }
+
+    // Wait for renderer to reply on 'renderer-ready' or timeout
+    const TIMEOUT_MS = 2000;
+    let finished = false;
+    const onReady = (event) => {
+      finished = true;
+      isQuitting = true;
+      try { win.destroy(); } catch (e) { win.close(); }
+    };
+
+    ipcMain.once('renderer-ready', onReady);
+
+    setTimeout(() => {
+      if (finished) return;
+      ipcMain.removeListener('renderer-ready', onReady);
+      isQuitting = true;
+      try { win.destroy(); } catch (e) { win.close(); }
+    }, TIMEOUT_MS);
+  });
 
   // Debug hooks: log load failures and open devtools in packaged app to inspect white screen issues
   win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {

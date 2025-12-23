@@ -191,22 +191,28 @@ const CalendarApp = () => {
         }
     }, [events]);
 
-    // Ensure events are flushed synchronously when the renderer is about to unload
+    // Graceful shutdown: register a handler invoked by main when it's about
+    // to close the window. We save asynchronously and then signal readiness.
+    const eventsRef = useRef(events);
+    useEffect(() => { eventsRef.current = events; }, [events]);
+
     useEffect(() => {
-        const handleBeforeUnload = () => {
+        if (!window?.electronAPI?.onPrepareToClose) return;
+        const unsubscribe = window.electronAPI.onPrepareToClose(async () => {
             try {
-                if (window?.electronAPI?.saveEventsSync) {
-                    const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
-                    window.electronAPI.saveEventsSync(serializable);
+                const serializable = eventsRef.current.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+                if (window?.electronAPI?.saveEvents) {
+                    await window.electronAPI.saveEvents(serializable);
                 }
             } catch (err) {
-                console.error('sync save on unload failed:', err);
+                console.error('shutdown save failed:', err);
+            } finally {
+                try { window.electronAPI.signalReadyToClose(); } catch (e) {}
             }
-        };
+        });
 
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [events]);
+        return () => { try { unsubscribe(); } catch (e) {} };
+    }, []);
 
     // Päivittää tunnit/minuutit lomakekentästä. Täyttää tarvittaessa 0:lla etunollat.
   return <div className="calendar-app">

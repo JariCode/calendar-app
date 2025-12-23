@@ -1,0 +1,57 @@
+name: Package Windows Installer
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  package-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app (Vite)
+        run: npm run build
+
+      - name: Setup code signing certificate (optional)
+        if: env.CSC_LINK != ''
+        shell: powershell
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: |
+          Write-Host "Preparing code signing certificate"
+          if ($env:CSC_LINK -match '^https?://') {
+            Invoke-WebRequest -Uri $env:CSC_LINK -OutFile cert.p12
+          } else {
+            try {
+              [System.IO.File]::WriteAllBytes('cert.p12', [System.Convert]::FromBase64String($env:CSC_LINK))
+            } catch {
+              Write-Error "Failed to decode CSC_LINK as base64"
+              exit 1
+            }
+          }
+          # electron-builder expects certificate available via CSC_LINK or CSC_KEY_PASSWORD envs
+          Write-Host "Certificate prepared"
+
+      - name: Create installer (electron-builder)
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: npm run dist
+
+      - name: Upload installer artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: dist/**

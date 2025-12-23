@@ -3,8 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Content Security Policy: restrict resources to self. Adjust if you add trusted external endpoints. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self' https:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;">
+            <!-- Production Content Security Policy: strict defaults, no inline styles.
+              During development Vite injects styles via <style> tags; run `npm run dev`
+              with the dev CSP (temporary) OR test UI using `npm run build` and
+              open the production build to validate CSP behavior. -->
+            <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:;">
     <title>Kalenteri</title>
     <link rel="icon" href="./calendar.ico">
   </head>

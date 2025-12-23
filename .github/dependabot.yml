@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    # Optionally you can limit to security updates only by adding:
+    # allow:
+    #   - dependency-type: "direct"

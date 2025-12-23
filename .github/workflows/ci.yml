@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build + Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Vite)
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=moderate || true
+
+      - name: Static security checks
+        run: |
+          # Fail build if risky patterns are present
+          set -e
+          if grep -R --line-number "\beval\s*\(|new Function\(|nodeIntegration:\s*true" . ; then
+            echo "Security check failed: prohibited patterns found (eval/new Function/nodeIntegration:true)" >&2
+            exit 2
+          else
+            echo "Static security checks passed"
+          fi
+
+      - name: Upload dist artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/**
