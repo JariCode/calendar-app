@@ -71,6 +71,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
+    // Set window/taskbar icon (use an .ico on Windows). Place `calendar.ico` next to main.cjs.
+    icon: path.join(__dirname, 'calendar.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
