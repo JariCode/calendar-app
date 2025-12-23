@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 const fs = require('fs').promises;
+const fsSync = require('fs');
 
 function getEventsPath() {
   return path.join(app.getPath('userData'), 'events.json');
@@ -49,6 +50,20 @@ ipcMain.handle('save-events', async (event, events) => {
   } catch (err) {
     try { await fs.unlink(tmp); } catch (e) {}
     throw err;
+  }
+});
+
+// Synchronous save handler for use during renderer unload/close
+ipcMain.on('save-events-sync', (event, events) => {
+  try {
+    const p = getEventsPath();
+    fsSync.mkdirSync(path.dirname(p), { recursive: true });
+    const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+    fsSync.writeFileSync(p, JSON.stringify(serializable), 'utf8');
+    event.returnValue = { ok: true };
+  } catch (err) {
+    console.error('save-events-sync failed:', err);
+    try { event.returnValue = { ok: false, error: String(err) }; } catch (e) {}
   }
 });
 

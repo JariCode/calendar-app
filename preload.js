@@ -5,4 +5,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   loadEvents: () => ipcRenderer.invoke('load-events'),
   saveEvents: (events) => ipcRenderer.invoke('save-events', events)
+  ,
+  saveEventsSync: (events) => ipcRenderer.sendSync('save-events-sync', events)
 });

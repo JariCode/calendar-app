@@ -148,15 +148,17 @@ const CalendarApp = () => {
                 console.error('Electron load failed:', err);
             }
 
-            // Fallback: localStorage
-            try {
-                const raw = localStorage.getItem('calendarEvents');
-                if (raw) {
-                    const parsed = JSON.parse(raw).map(e => ({ ...e, date: new Date(e.date) }));
-                    setEvents(parsed);
+            // Only use localStorage fallback when NOT running inside Electron (web build)
+            if (!window?.electronAPI?.loadEvents) {
+                try {
+                    const raw = localStorage.getItem('calendarEvents');
+                    if (raw) {
+                        const parsed = JSON.parse(raw).map(e => ({ ...e, date: new Date(e.date) }));
+                        setEvents(parsed);
+                    }
+                } catch (err) {
+                    console.error('localStorage load failed:', err);
                 }
-            } catch (err) {
-                console.error('localStorage load failed:', err);
             }
         }
         load();
@@ -187,6 +189,23 @@ const CalendarApp = () => {
         return () => {
             if (saveTimer.current) clearTimeout(saveTimer.current);
         }
+    }, [events]);
+
+    // Ensure events are flushed synchronously when the renderer is about to unload
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            try {
+                if (window?.electronAPI?.saveEventsSync) {
+                    const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+                    window.electronAPI.saveEventsSync(serializable);
+                }
+            } catch (err) {
+                console.error('sync save on unload failed:', err);
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [events]);
 
     // Päivittää tunnit/minuutit lomakekentästä. Täyttää tarvittaessa 0:lla etunollat.
