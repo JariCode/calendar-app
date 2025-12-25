@@ -1,3 +1,54 @@
+# Node
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Vite cache
+.vite/
+.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+.history/
+
+# Environment / secrets
+.env
+.env.*
+.secret
+secrets.json
+
+# Certificates and keys
+*.pfx
+*.p12
+*.pem
+*.key
+cert*.pfx.base64.txt
+
+# Electron / installer artifacts
+dist-electron/
+release/
+*.exe
+*.msi
+
+# Misc
+.sass-cache
+coverage/
+/.nyc_output
 # Logs
 logs
 *.log

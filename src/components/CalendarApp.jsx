@@ -24,6 +24,8 @@ const CalendarApp = () => {
     const [showEventPopup, setShowEventPopup] = useState(false);
     const [events, setEvents] = useState([]);
     const [eventTime, setEventTime] = useState({ hours: '', minutes: '' });
+    const [eventEndTime, setEventEndTime] = useState({ hours: '', minutes: '' });
+    const [eventEndDate, setEventEndDate] = useState(null);
     const [eventText, setEventText] = useState('');
     const [editingEvent, setEditingEvent] = useState(null);
 
@@ -63,7 +65,11 @@ const CalendarApp = () => {
         if(clickedDate >= today || isSameDay(clickedDate, today)) {
             setSelectedDate(clickedDate);
             setShowEventPopup(true);
-            setEventTime({ hours: '00', minutes: '00' });
+            // aloitusaika valinnaiseksi: oletuksena tyhjä, aktivoituu kun käyttäjä syöttää
+            setEventTime({ hours: '', minutes: '' });
+            // by default leave end time/date empty (optional)
+            setEventEndTime({ hours: '', minutes: '' });
+            setEventEndDate(null);
             setEventText('');
             setEditingEvent(null);
         }
@@ -79,10 +85,33 @@ const CalendarApp = () => {
     }
 
     const handleEventSubmit = () => {
+        const startDate = new Date(selectedDate);
+        const startTimeMinutes = (parseInt(eventTime.hours || '0', 10) * 60) + parseInt(eventTime.minutes || '0', 10);
+        // Determine whether user provided an end time (optional)
+        const hasEndTime = (eventEndTime.hours !== '' || eventEndTime.minutes !== '');
+        let endDateFinal = null;
+        let endTimeFinal = null;
+
+        if (hasEndTime) {
+            let endDateObj = eventEndDate ? new Date(eventEndDate) : new Date(startDate);
+            const endTimeMinutes = (parseInt(eventEndTime.hours || '0', 10) * 60) + parseInt(eventEndTime.minutes || '0', 10);
+            // If end is before start, snap end to start
+            if (endDateObj < startDate || (endDateObj.getTime() === startDate.getTime() && endTimeMinutes < startTimeMinutes)) {
+                endDateObj = new Date(startDate);
+            }
+            endDateFinal = endDateObj;
+            endTimeFinal = `${String(eventEndTime.hours).padStart(2, '0')}:${String(eventEndTime.minutes).padStart(2, '0')}`;
+        }
+
+        const hasStartTime = (eventTime.hours !== '' || eventTime.minutes !== '');
+        const timeFinal = hasStartTime ? `${String(eventTime.hours).padStart(2, '0')}:${String(eventTime.minutes).padStart(2, '0')}` : null;
+
         const newEvent = {
             id: editingEvent ? editingEvent.id : Date.now(),
-            date: selectedDate,
-            time: `${eventTime.hours.padStart(2, '0')}:${eventTime.minutes.padStart(2, '0')}`,
+            date: startDate,
+            time: timeFinal,
+            endDate: endDateFinal,
+            endTime: endTimeFinal,
             text: eventText
         }
 
@@ -98,7 +127,9 @@ const CalendarApp = () => {
         updatedEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         setEvents(updatedEvents);
-        setEventTime({ hours: '00', minutes: '00' });
+        setEventTime({ hours: '', minutes: '' });
+        setEventEndTime({ hours: '', minutes: '' });
+        setEventEndDate(null);
         setEventText('');
         setShowEventPopup(false);
         setEditingEvent(null);
@@ -106,10 +137,26 @@ const CalendarApp = () => {
 
     const handleEventEdit = (event) => {
         setSelectedDate(new Date(event.date))
-        setEventTime({
-            hours: event.time.split(':')[0],
-            minutes: event.time.split(':')[1]
-        });
+        // Prefill start time only if event has one (optional)
+        if (event.time) {
+            setEventTime({
+                hours: event.time.split(':')[0],
+                minutes: event.time.split(':')[1]
+            });
+        } else {
+            setEventTime({ hours: '', minutes: '' });
+        }
+        // If event has endTime, populate; otherwise leave empty (optional)
+        if (event.endTime) {
+            setEventEndTime({
+                hours: event.endTime.split(':')[0],
+                minutes: event.endTime.split(':')[1]
+            });
+            setEventEndDate(event.endDate ? new Date(event.endDate) : new Date(event.date));
+        } else {
+            setEventEndTime({ hours: '', minutes: '' });
+            setEventEndDate(null);
+        }
         setEventText(event.text);
         setEditingEvent(event);
         setShowEventPopup(true);
@@ -130,6 +177,25 @@ const CalendarApp = () => {
         }));
     }
 
+    const handleEndTimeChange = (e) => {
+        const { name, value } = e.target;
+        setEventEndTime((prevTime) => ({
+            ...prevTime,
+            [name]: value.padStart(2, '0')
+        }));
+    }
+
+    const handleEndDatePartChange = (e) => {
+        const { name, value } = e.target;
+        const num = parseInt(value || '0', 10);
+        const base = eventEndDate ? new Date(eventEndDate) : new Date(selectedDate);
+        if (isNaN(num)) return;
+        if (name === 'day') base.setDate(Math.max(1, Math.min(31, num)));
+        if (name === 'month') base.setMonth(Math.max(1, Math.min(12, num)) - 1);
+        if (name === 'year') base.setFullYear(num);
+        setEventEndDate(base);
+    }
+
     // --- Persistence: load from Electron IPC or localStorage, save debounced ---
     const saveTimer = useRef(null);
 
@@ -139,7 +205,11 @@ const CalendarApp = () => {
                     if (window?.electronAPI?.loadEvents) {
                         const loaded = await window.electronAPI.loadEvents();
                         if (Array.isArray(loaded)) {
-                            const parsed = loaded.map(e => ({ ...e, date: e.date ? new Date(e.date) : new Date() }));
+                            const parsed = loaded.map(e => ({ ...e,
+                                date: e.date ? new Date(e.date) : new Date(),
+                                endDate: e.endDate ? new Date(e.endDate) : null,
+                                endTime: e.endTime ?? null
+                            }));
                             setEvents(parsed);
                             return;
                         }
@@ -153,7 +223,11 @@ const CalendarApp = () => {
                 try {
                     const raw = localStorage.getItem('calendarEvents');
                     if (raw) {
-                        const parsed = JSON.parse(raw).map(e => ({ ...e, date: new Date(e.date) }));
+                        const parsed = JSON.parse(raw).map(e => ({ ...e,
+                            date: new Date(e.date),
+                            endDate: e.endDate ? new Date(e.endDate) : null,
+                            endTime: e.endTime ?? null
+                        }));
                         setEvents(parsed);
                     }
                 } catch (err) {
@@ -167,7 +241,11 @@ const CalendarApp = () => {
     useEffect(() => {
         // always save to localStorage as a fallback/persistence for web
         try {
-            const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+            const serializable = events.map(e => ({ ...e,
+                date: e.date instanceof Date ? e.date.toISOString() : e.date,
+                endDate: e.endDate instanceof Date ? e.endDate.toISOString() : e.endDate ?? null,
+                endTime: e.endTime ?? null
+            }));
             localStorage.setItem('calendarEvents', JSON.stringify(serializable));
         } catch (err) {
             console.error('localStorage save failed:', err);
@@ -179,7 +257,11 @@ const CalendarApp = () => {
         if (saveTimer.current) clearTimeout(saveTimer.current);
         saveTimer.current = setTimeout(async () => {
             try {
-                const serializable = events.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+                const serializable = events.map(e => ({ ...e,
+                    date: e.date instanceof Date ? e.date.toISOString() : e.date,
+                    endDate: e.endDate instanceof Date ? e.endDate.toISOString() : e.endDate ?? null,
+                    endTime: e.endTime ?? null
+                }));
                 await window.electronAPI.saveEvents(serializable);
             } catch (err) {
                 console.error('Electron save failed:', err);
@@ -200,7 +282,11 @@ const CalendarApp = () => {
         if (!window?.electronAPI?.onPrepareToClose) return;
         const unsubscribe = window.electronAPI.onPrepareToClose(async () => {
             try {
-                const serializable = eventsRef.current.map(e => ({ ...e, date: e.date instanceof Date ? e.date.toISOString() : e.date }));
+                const serializable = eventsRef.current.map(e => ({ ...e,
+                    date: e.date instanceof Date ? e.date.toISOString() : e.date,
+                    endDate: e.endDate instanceof Date ? e.endDate.toISOString() : e.endDate ?? null,
+                    endTime: e.endTime ?? null
+                }));
                 if (window?.electronAPI?.saveEvents) {
                     await window.electronAPI.saveEvents(serializable);
                 }
@@ -256,12 +342,27 @@ const CalendarApp = () => {
         {showEventPopup && (
         <div className="event-popup">
             <div className="time-input">
-                <div className="event-popup-time">Aika</div>
+                <div className="event-popup-time">Alku</div>
                 {/* Tunnit ja minuutit: numeroinputit */}
-                <input type="number" name="hours" min={0} max={24} className="hours" value={eventTime.hours} 
+                <input type="number" name="hours" min={0} max={24} className="hours" placeholder="tun" value={eventTime.hours} 
                 onChange={handleTimeChange} />
-                <input type="number" name="minutes" min={0} max={60} className="minutes" value={eventTime.minutes} 
+                <input type="number" name="minutes" min={0} max={60} className="minutes" placeholder="min" value={eventTime.minutes} 
                 onChange={handleTimeChange}/>
+            </div>
+            <div className="time-input">
+                <div className="event-popup-time">Loppu</div>
+                    <input type="number" name="hours" min={0} max={24} className="hours" placeholder="tun" value={eventEndTime.hours} 
+                    onChange={handleEndTimeChange} />
+                    <input type="number" name="minutes" min={0} max={60} className="minutes" placeholder="min" value={eventEndTime.minutes} 
+                    onChange={handleEndTimeChange}/>
+            </div>
+            <div className="time-input">
+                <div className="event-popup-time" style={{ visibility: 'hidden' }}>spacer</div>
+                <div className="date-controls">
+                    <input type="number" name="day" min={1} max={31} className="hours" placeholder="pv" value={eventEndDate ? String(eventEndDate.getDate()).padStart(2, '0') : ''} onChange={handleEndDatePartChange} />
+                    <input type="number" name="month" min={1} max={12} className="minutes" placeholder="kk" value={eventEndDate ? String(eventEndDate.getMonth() + 1).padStart(2, '0') : ''} onChange={handleEndDatePartChange} />
+                    <input type="number" name="year" min={1970} max={9999} className="year-input" placeholder="vvvv" value={eventEndDate ? String(eventEndDate.getFullYear()) : ''} onChange={handleEndDatePartChange} />
+                </div>
             </div>
             {/* Tapahtuman teksti (max 60 merkkiä) */}
             <textarea placeholder="Kirjoita tapahtuman teksti (enintään 60 merkkiä)" value={eventText} 
@@ -279,21 +380,46 @@ const CalendarApp = () => {
         </div>
         )}
         {/* Esimerkki tapahtumasta näkyvillä listassa */}
-        {events.map((event, index) => (
-        <div className="event" key={index}>
-            <div className="event-date-wrapper">
-                <div className="event-date">{`${
-                monthsOfYear[event.date.getMonth()]
-                } ${event.date.getDate()}, ${event.date.getFullYear()}`}</div>
-                <div className="event-time">{event.time}</div>
+        {events.map((event, index) => {
+            const start = new Date(event.date);
+            const end = event.endDate ? new Date(event.endDate) : null;
+            const sameDay = end ? (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()) : false;
+            return (
+            <div className="event" key={index}>
+                <div className="event-date-wrapper">
+                    {/** If no end date or end is same day -> show one date then time range */}
+                    {(!end || sameDay) && (
+                        <>
+                            <div className="event-date">{`${monthsOfYear[start.getMonth()]} ${start.getDate()}, ${start.getFullYear()}`}</div>
+                            <div className="event-time">
+                                {/** If both start and end on same day and both times exist, show range; otherwise show whichever exists */}
+                                {end && sameDay ? (
+                                    (event.time && event.endTime) ? `${event.time}-${event.endTime}` : (event.endTime || event.time || '')
+                                ) : (
+                                    event.time || ''
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/** If end date exists and is different day -> show start date/time and end date/time on separate rows with dashes */}
+                    {end && !sameDay && (
+                        <>
+                            <div className="event-date">{`${monthsOfYear[start.getMonth()]} ${start.getDate()}, ${start.getFullYear()}`}</div>
+                            <div className="event-time">{event.time ? `${event.time}-` : ''}</div>
+                            <div className="event-date">{`${monthsOfYear[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`}</div>
+                            <div className="event-time">{event.endTime ? `-${event.endTime}` : ''}</div>
+                        </>
+                    )}
+                </div>
+                <div className="event-text">{event.text}</div>
+                <div className="event-buttons">
+                    <i className="bx bxs-edit-alt" onClick={() => handleEventEdit(event)}></i>
+                    <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
+                </div>
             </div>
-            <div className="event-text">{event.text}</div>
-            <div className="event-buttons">
-                <i className="bx bxs-edit-alt" onClick={() => handleEventEdit(event)}></i>
-                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
-            </div>
-        </div>
-        ))}
+            )
+        })}
     </div>
   </div>
 }

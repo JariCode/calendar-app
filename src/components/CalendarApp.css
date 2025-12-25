@@ -133,7 +133,7 @@
 }
 .event-popup {
     position: absolute;
-    top: 38%;
+    top: 28%;
     left: 3rem;
     background: linear-gradient(180deg, rgba(6,8,14,0.9), rgba(8,10,18,0.86));
     backdrop-filter: blur(6px) saturate(120%);
@@ -180,6 +180,25 @@
     height: 4rem;
     text-align: center;
     font-size: clamp(1.2rem, 1.2cqi, 1.6rem);
+}
+
+.time-input input::placeholder,
+.date-controls input::placeholder,
+.year-input::placeholder {
+    color: rgba(188,215,238,0.55);
+    opacity: 1; /* ensure visible on dark background */
+    font-size: 0.95em;
+}
+
+/* Date controls: align first date input to start at same x as labels */
+.date-controls {
+    display: flex;
+    column-gap: 1rem;
+    align-items: center;
+}
+.date-controls input:first-child {
+    /* move left by label width so it starts where labels (Aloitus/Loppu) start */
+    margin-left: calc(-1 * clamp(4rem, 4cqi, 7rem));
 }
 
 .time-input input[type="number"]::-webkit-outer-spin-button,
@@ -246,7 +265,7 @@
 
 .event {
     width: 100%;
-    height: 7rem;
+    min-height: 7rem;
     background: linear-gradient(90deg, rgba(122,252,255,0.18), rgba(120,72,255,0.12));
     padding: 1.5rem 0.5rem;
     border-radius: 1rem;
@@ -304,6 +323,19 @@
     cursor: pointer;
 }
 
+/* Vuosi-input kalenterin navigointiin */
+.year-input {
+    background-color: transparent;
+    border: none;
+    border-top: 0.18rem solid #7afcff;
+    border-bottom: 0.18rem solid #7afcff;
+    color: #f7fbff;
+    width: clamp(6rem, 6cqi, 9rem);
+    height: 4rem;
+    text-align: center;
+    font-size: clamp(1.2rem, 1.2cqi, 1.6rem);
+}
+
 @media (max-width: 850px) {
     .calendar-app {
         flex-direction: column;
@@ -346,9 +378,18 @@
     font-size: clamp(1.2rem, 2cqi, 1.6rem);
    }
 
-   .event-popup textarea {
+    .year-input {
+     width: clamp(6rem, 12cqi, 10rem);
+    }
+
+    .event-popup textarea {
     width: clamp(18rem, 35cqi, 28rem);
    }
+
+    /* ensure date-controls first-child margin matches the larger label width in this breakpoint */
+    .date-controls input:first-child {
+     margin-left: calc(-1 * clamp(5rem, 10cqi, 8rem));
+    }
 
     .event-popup textarea::placeholder {
     font-size: clamp(1rem, 1.5cqi, 1.2rem);
@@ -397,3 +438,4 @@
         aspect-ratio: 3/2;
     }
 }
+
