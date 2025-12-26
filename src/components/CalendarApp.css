@@ -171,7 +171,7 @@
     transform-origin: top center;
 }
 
-/* Ensure popup floats above day overlays */
+/* Tapahtuma-popup */
 .event-popup { z-index: 1000; }
 
 .event-popup { transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease; }
@@ -298,18 +298,21 @@
     margin-bottom: 2rem;
     position: relative;
     border: 0.06rem solid rgba(255,255,255,0.02);
-    overflow: hidden;
+    overflow: visible;
+    transition: transform 200ms cubic-bezier(.2,.9,.2,1), box-shadow 200ms ease, border-color 200ms ease;
+    will-change: transform, box-shadow;
 }
 
-/* Highlighted event when hovering a day in the calendar */
+/* Korostettu tapahtuma kun hoveroidaan kalenterin päivää */
 .event.highlight {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 2.2rem 3rem rgba(0,150,200,0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 1.2rem 2.4rem rgba(0,150,200,0.10);
     border-color: rgba(0,150,200,0.18);
+    border-radius: 1rem;
     background: linear-gradient(90deg, rgba(0,200,180,0.06), rgba(0,150,200,0.04));
 }
 
-.event:hover { transform: translateY(-6px); box-shadow: 0 1.4rem 3rem rgba(4,8,20,0.6); }
+
 
 .event-date-wrapper {
     display: flex;
