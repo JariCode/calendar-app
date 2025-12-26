@@ -28,6 +28,7 @@ const CalendarApp = () => {
     const [eventEndDate, setEventEndDate] = useState(null);
     const [eventText, setEventText] = useState('');
     const [editingEvent, setEditingEvent] = useState(null);
+    const [hoveredDate, setHoveredDate] = useState(null);
 
     // Komponentin tila: valittu kuukausi/vuosi/päivä ja tapahtumiin liittyvät arvot
     // - `currentMonth` / `currentYear`: mitä kuukautta näytetään
@@ -82,6 +83,20 @@ const CalendarApp = () => {
             date1.getMonth() === date2.getMonth() &&
             date1.getDate() === date2.getDate()
         );
+    }
+
+    // Palauttaa tapahtumat jotka kuuluvat annettuun päivään (sisältää monipäiväiset)
+    const eventsForDate = (date) => {
+        return events.filter((ev) => {
+            const start = ev.date instanceof Date ? ev.date : new Date(ev.date);
+            const end = ev.endDate ? (ev.endDate instanceof Date ? ev.endDate : new Date(ev.endDate)) : start;
+            const dY = date.getFullYear(), dM = date.getMonth(), dD = date.getDate();
+            const sY = start.getFullYear(), sM = start.getMonth(), sD = start.getDate();
+            const eY = end.getFullYear(), eM = end.getMonth(), eD = end.getDate();
+            const afterOrEqStart = (dY > sY) || (dY === sY && (dM > sM || (dM === sM && dD >= sD)));
+            const beforeOrEqEnd = (dY < eY) || (dY === eY && (dM < eM || (dM === eM && dD <= eD)));
+            return afterOrEqStart && beforeOrEqEnd;
+        });
     }
 
     const handleEventSubmit = () => {
@@ -327,12 +342,26 @@ const CalendarApp = () => {
         {/* Päivät-ruudukko: ensin tyhjät solut kuukauden alussa, sitten päivät 1..N */}
         <div className="days">
             {[...Array(leadingEmptyDays).keys()].map((_, index) => <span key={`empty-${index}`}/>)}
-            {[...Array(daysInMonth).keys()].map(day => 
-            <span key={day + 1} className={day + 1 === currentDate.getDate() &&
-             currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear()
-              ? "current-day" : ""
-              } onClick={() => handleDayClick(day + 1)}>
-            {day + 1}</span>)}
+            {[...Array(daysInMonth).keys()].map(day => {
+                const dayNum = day + 1;
+                const dateObj = new Date(currentYear, currentMonth, dayNum);
+                const dayEvents = eventsForDate(dateObj);
+                const isToday = dayNum === currentDate.getDate() && currentMonth === currentDate.getMonth() && currentYear === currentDate.getFullYear();
+                return (
+                    <span
+                        key={dayNum}
+                        className={isToday ? 'current-day' : ''}
+                        onClick={() => handleDayClick(dayNum)}
+                        onMouseEnter={() => { if (dayEvents.length) setHoveredDate(dateObj); }}
+                        onMouseLeave={() => { setHoveredDate(null); }}
+                    >
+                        <div className="day-number">{dayNum}</div>
+                        {dayEvents.length > 0 && (
+                            <div className="day-overlay" title={dayEvents.map(e => e.text).join('; ')}></div>
+                        )}
+                    </span>
+                )
+            })}
         </div>
     </div>
 
@@ -384,8 +413,9 @@ const CalendarApp = () => {
             const start = new Date(event.date);
             const end = event.endDate ? new Date(event.endDate) : null;
             const sameDay = end ? (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth() && start.getDate() === end.getDate()) : false;
+            const isHighlighted = hoveredDate ? eventsForDate(hoveredDate).some(e => e.id === event.id) : false;
             return (
-            <div className="event" key={index}>
+                <div className={`event ${isHighlighted ? 'highlight' : ''}`} key={index}>
                 <div className="event-date-wrapper">
                     {/** If no end date or end is same day -> show one date then time range */}
                     {(!end || sameDay) && (

@@ -78,6 +78,9 @@ function createWindow() {
     }
   });
 
+  // Start the app maximized so user doesn't need to expand the window manually
+  try { win.maximize(); } catch (e) { /* ignore if maximize isn't supported on platform */ }
+
   if (isDev) {
     win.loadURL('http://localhost:5173');
   } else {
