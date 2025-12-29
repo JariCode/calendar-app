@@ -33,7 +33,7 @@
     "wait-on": "^7.0.1"
   },
   "build": {
-    "icon": "calendar.ico",
+    "icon": "calendar.png",
     "appId": "com.example.react-desktop",
     "productName": "Kalenteri",
     "directories": {
@@ -43,7 +43,7 @@
       "dist/**/*",
       "main.cjs",
       "preload.js",
-      "calendar.ico"
+      "calendar.png"
     ],
     "mac": {
       "target": "dmg"
