@@ -1,14 +1,8 @@
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-# Kalenteri (React + Vite + Electron)
+# Kalenteri (suomeksi)
 
 Pieni kalenterisovellus, rakennettu Reactilla ja Vite:llä, pakattuna Electronilla.
+
+Tämä README sisältää suomenkielisen yhteenvedon projektin käytöstä ja rakennusohjeet.
 
 ## Nopeasti
 
@@ -47,7 +41,7 @@ npm run dist
 
 ## Turvallisuus & tuotantovalmistus
 
-Sovellus on päivitetty vähentämään tärkeitä riskejä (poistettu synkroninen IPC-altistus, lisätty sulkemishandshake, preload rajoitettu). Ennen jakelua suositeltavaa tehdä seuraavat:
+Sovellus on päivitetty vähentämään riskejä (esim. synkroniset IPC-kutsut poistettu, lisätty sulkemishandshake ja rajoitettu preload). Ennen jakelua suositeltavaa tehdä seuraavat tarkistukset:
 
 1. Testaa tuotantorakennus UI:n kanssa:
 
@@ -57,34 +51,19 @@ npm run build
 # Avaa dist/index.html selaimessa tai asenna tuotettu asennin
 ```
 
-2. Varmista, että `index.html` sisältää tiukan CSP:n tuotantoon (repo sisältää tuotantocsp:n). Poista kehityksen `unsafe-inline` käyttö ja varmista, että kaikki tyylit tulevat erillisistä tiedostoista after Vite build.
+2. Varmista, että `index.html` sisältää tiukan CSP:n tuotantoon. Poista kehityksen `unsafe-inline`-käytöt ja varmista, että kaikki tyylit ovat bundlattu tiedostoissa.
 
 3. Testaa sulkeminen ja uudelleenkäynnistys varmistaaksesi tapahtumien säilymisen.
 
-4. Aja `npm audit` ja tee tarvittavat päivitykset; käytä myös SCA-työkalua (Snyk/Dependabot) jos mahdollista.
+4. Aja `npm audit` ja päivitä haavoittuvuudet; käytä myös SCA-työkaluja (Snyk/Dependabot) jos mahdollista.
 
-5. Signeeraa Windows-installer (code signing) ennen julkaisua — ilman signeerausta käyttäjät näkevät varoituksia.
+5. Signeeraa Windows-installer ennen julkaisua — ilman signeerausta käyttäjät saattavat saada varoituksia.
 
 6. Testaa asentaminen ja poistaminen puhtaassa VM:ssä tai erillisellä käyttäjätilillä.
 
 Tarvittaessa autan automatisoimaan buildin ja signeerauksen CI:ssä.
 
-### Code signing in CI (GitHub Actions)
+---
 
-The repo's Windows packaging workflow supports optional code signing using two GitHub Secrets:
-
-- `CSC_LINK` — either a URL to download the certificate (p12/pfx) or the base64-encoded certificate content.
-- `CSC_KEY_PASSWORD` — the certificate password.
-
-To configure:
-
-1. Go to your repository Settings → Secrets → Actions and add `CSC_LINK` and `CSC_KEY_PASSWORD`.
-	- If you store the cert in a secure storage (Azure KeyVault / S3 signed URL), set `CSC_LINK` to that URL.
-	- Or set `CSC_LINK` to the base64-encoded contents of the `.p12` file.
-
-2. The `package-windows.yml` workflow will attempt to fetch or decode the certificate and pass the values to `electron-builder`.
-
-3. Test a signed build by pushing to `main` and downloading the artifact from the workflow run.
-
-If you prefer, I can help set up secure storage (Azure Key Vault/GitHub Encrypted secrets) and CI secrets.
+Seuraavaksi alkuperäinen englanninkielinen dokumentaatio (yllä) jatkuu tiedoston loppuosassa, jos tarvitset lisätietoja Vite/ESLint-pluginien asetuksista.
 

@@ -3,12 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <!-- Production Content Security Policy: strict defaults, no inline styles.
-              During development Vite injects styles via <style> tags; run `npm run dev`
-              with the dev CSP (temporary) OR test UI using `npm run build` and
-              open the production build to validate CSP behavior. -->
-            <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:">
+    <!--
+      index.html
+      --------------------
+      Pää-HTML-tiedosto, joka lataa React-sovelluksen `src/main.jsx` kautta.
+
+      Huomio CSP:ssä:
+      - Tuotantoon on asetettu tiukka Content Security Policy (CSP), joka estää
+        inline-skriptit ja -tyylit. Tämä auttaa vähentämään XSS-riskejä.
+      - Kehityksessä Vite voi injektoida tyylejä inline-tyyleinä; kehitystä varten
+        voit sallia väliaikaisesti tarvittavat lähteet tai testata tuotantorakennusta
+        (`npm run build`) varmistaaksesi CSP-yhteensopivuuden.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:">
     <title>Kalenteri</title>
+    <!-- Sovelluksen ikoni (Windows: käytä .ico jos haluat tehtäväpalkki-ikonin) -->
     <link rel="icon" href="./calendar.ico">
   </head>
   <body>

@@ -31,6 +31,12 @@
     filter: blur(4rem);
 }
 
+/* ---------------------------------
+    Pääasettelu: .calendar-app
+    - Määrittelee kortin tyylit, varjostukset ja 3D-perspektiivin
+    - Pidä muotoilu yhtenäisenä koko sovelluksessa
+----------------------------------*/
+
 .calendar {
     width: 40%;
 }
@@ -44,6 +50,12 @@
     letter-spacing: 0.3rem;
     padding-left: 1.3rem;
 }
+
+/* ---------------------------------
+    Otsikko ja navigointi
+    - `.heading`: pääotsikon fontti ja tyyli
+    - `.navigate-date`: kuukauden nimi, vuosi ja nuolinapit
+----------------------------------*/
 
 .navigate-date {
     display: flex;
@@ -64,6 +76,12 @@
     margin-left: auto;
 }
 
+/* ---------------------------------
+    Navigointipainikkeet
+    - Tyylit nuoli-ikoneille (.buttons i)
+    - Käytetään boxicons-ikoneita HTML:ssä
+----------------------------------*/
+
 .buttons i {
     width: 3.5rem;
     height: 3.5rem;
@@ -82,6 +100,12 @@
     display: flex;
     margin: 3rem 0;
 }
+
+/* ---------------------------------
+    Viikonpäivät-rivi
+    - Näyttää viikonpäivien lyhenteet (Ma..Su)
+    - Vastaa kalenterin sarakkeiden otsikosta
+----------------------------------*/
 
 .weekdays span {
     width: calc(100% / 7);
@@ -132,6 +156,13 @@
     box-shadow: 0 0 1.6rem rgba(0,150,200,0.16);
 }
 
+/* ---------------------------------
+    Päiväruudukko ja päivien korostukset
+    - `.days` luo ruudukon, jossa jokainen päivä on oma span-elementtinsä
+    - `.current-day` korostaa tämän päivän näkyvästi
+    - `.day-overlay` näyttää indikaattorin jos päivällä on tapahtumia
+----------------------------------*/
+
 .current-day {
     background: radial-gradient(circle at 30% 30%, #ff7a18, #ff4d6d 70%);
     border-radius: 50%;
@@ -148,6 +179,12 @@
     padding: 3rem 0;
     overflow-y: auto;
 }
+
+/* ---------------------------------
+    Oikean puolen tapahtumaluettelo
+    - `.events` sisältää listan päivän tapahtumista ja popup-ikkunan
+    - Omistaa oman vierityksen (overflow-y)
+----------------------------------*/
 
 .events::-webkit-scrollbar {
     display: none;
@@ -170,6 +207,12 @@
     row-gap: 2rem;
     transform-origin: top center;
 }
+
+/* ---------------------------------
+    Tapahtuma-popup (lisää/muokkaa)
+    - Sijoitettu absoluuttisesti kalenterin päälle
+    - Sisältää kentät tunnille, minuuteille, loppuajalle ja tekstille
+----------------------------------*/
 
 /* Tapahtuma-popup */
 .event-popup { z-index: 1000; }
@@ -242,6 +285,12 @@
     transition: box-shadow 0.35s ease, border 0.35s ease;
 }
 
+/* ---------------------------------
+    Tapahtuman lomakkeenkentät
+    - Syötekenttien ja textarea:n tyylit
+    - Huomioidaan fokus-tilat saavutettavuudelle
+----------------------------------*/
+
 .event-popup textarea:focus {
     box-shadow: 0 0 1.6rem 0.6rem rgba(122,252,255,0.07);
     border: 0.08rem solid rgba(122,252,255,0.12);
@@ -278,6 +327,11 @@
     cursor: pointer;
 }
 
+/* ---------------------------------
+    Popup-painikkeet
+    - Tallennus/päivitä -painike ja sulje-ikoni
+----------------------------------*/
+
 .close-event-popup i {
     font-size: 2.5rem;
     color: #f7fbff;
@@ -303,6 +357,12 @@
     will-change: transform, box-shadow;
 }
 
+/* ---------------------------------
+    Tapahtumakortit listassa
+    - `.event` sisältää yksittäisen tapahtuman tiedot ja toiminnot
+    - `.event.highlight` käytetään korostamaan tapahtumaa hover-tilassa kalenterissa
+----------------------------------*/
+
 /* Korostettu tapahtuma kun hoveroidaan kalenterin päivää */
 .event.highlight {
     transform: translateY(-6px);
@@ -321,6 +381,12 @@
     width: 25%;
     border-right: 0.08rem solid rgba(255,255,255,0.04);
 }
+
+/* ---------------------------------
+    Tapahtuman aikajaon asettelu
+    - Vasemman puolen alue näyttää päivämäärän ja kellonajan
+    - Oikealla on teksti ja painikkeet muokkausta/poistoa varten
+----------------------------------*/
 .event-date {
     font-size: clamp(1rem, 1cqi, 1.2rem);
     color: #f3f9ff;
@@ -357,6 +423,11 @@
     color: #fbfcff;
     cursor: pointer;
 }
+
+/* ---------------------------------
+   Toimintonapit tapahtumille
+   - Muokkaa (edit) ja poista (delete) ikonit
+----------------------------------*/
 
 /* Vuosi-input kalenterin navigointiin */
 .year-input {
@@ -449,6 +520,11 @@
 
 }
 
+/* ---------------------------------
+    Media queries: 850px
+    - Mobiili- tai tablet-näkymät; vaihdetaan layout vaakasta pystyyn
+----------------------------------*/
+
 @media (max-width: 500px) {
     .calendar-app {
         aspect-ratio: 10/9;
@@ -467,6 +543,11 @@
         width: 100%;
     }
 }
+
+/* ---------------------------------
+    Media queries: 500px ja alle
+    - Lisämuutoksia hyvin pienille näytöille
+----------------------------------*/
 
 @media (max-width: 375px) {
     .calendar-app {

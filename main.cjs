@@ -2,7 +2,6 @@ const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 const fs = require('fs').promises;
-const fsSync = require('fs');
 
 // Lippu, joka kertoo onko sovellus jo käynnissä sulkemisprosessissa.
 // Estää useamman kerran sulkemiskäsittelyn käynnistymisen.
@@ -82,7 +81,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    // Set window/taskbar icon (use an .ico on Windows). Place `calendar.ico` next to main.cjs.
+    show: false, // Näytetään ikkuna vasta kun se on valmis
+    // Aseta ikkunan kuvake (calendar.ico) (Macissa ja Linuxissa calendar.png) sovelluksen juurihakemistosta
     icon: path.join(__dirname, 'calendar.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -102,13 +102,13 @@ function createWindow() {
 
   // Sulkemisen järjestetty kättely: pyydetään rendereria tallentamaan tila ennen sulkemista.
   win.on('close', (e) => {
-    if (isQuitting) return; // already proceeding to close
+    if (isQuitting) return; // Jo sulkemisprosessissa, sallitaan sulkeminen
     e.preventDefault();
-    // Send prepare signal to renderer
+    // Lähetä rendererille pyyntö valmistautua sulkemiseen
     try {
       win.webContents.send('prepare-to-close');
     } catch (err) {
-      // If we can't send, allow close to proceed
+      // Jos lähetys epäonnistuu (esim. renderer on jo kuollut), pakotetaan sulkeminen
       isQuitting = true;
       win.destroy();
       return;

@@ -11,6 +11,12 @@
 /* Tuodaan Google-fontit: Bebas Neue ja Comfortaa */
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Comfortaa:wght@300..700&display=swap');
 
+/* ---------------------------------
+     Fontit ja importit
+     - Täällä tuodaan ulkoiset fontit. Mikäli haluat tuotantoon täysin offline-version,
+         suosittelemme lataamaan fontit paikallisesti ja poistamaan @importin.
+----------------------------------*/
+
 /* Reset / perusasetukset: poistaa selaimen oletusmarginaalit */
 * {
     margin: 0;
@@ -20,10 +26,22 @@
     font-family: 'Comfortaa', sans-serif; /* käytetään Comfortaa-globaalia fonttia */
 }
 
+/* ---------------------------------
+   Reset / perusasetukset
+   - Nollaa selaimen oletustyylit, asettaa box-sizing: border-box
+   - Määrittää sovelluksen oletusfontin
+----------------------------------*/
+
 /* Perusyksikön asetus: 62.5% tarkoittaa 1rem = 10px (helpottaa laskemista) */
 html {
     font-size: 62.5%;
 }
+
+/* ---------------------------------
+   Perusyksikkö (rem)
+   - Muuttaa 1rem = 10px suhteeksi (62.5% oletusselaimen 16px:stä)
+   - Helpottaa responsiivisia laskelmia käyttäen rem-yksikköjä
+----------------------------------*/
 
 /* Keskitetty kontaineri, joka pitää kalenterin keskellä ikkunaa */
 .container {
@@ -36,10 +54,21 @@ html {
     perspective: 100rem; /* 3D-efektien perspektiiviä varten */
 }
 
+/* ---------------------------------
+   Sovelluksen pääkontaineri
+   - Pitää kalenterin ja paneelit keskitettyinä
+   - Taustagradient ja perspektiivi tarjoavat syvyyttä UI:hin
+----------------------------------*/
+
 /* Perustekstiväri (sovelluksen yleinen) */
 body {
     color: #e6f1fb;
 }
+
+/* ---------------------------------
+   Yleiset tekstivärit
+   - Aseta tässä sovelluksen päätekstin väri, jota muut komponentit perivät
+----------------------------------*/
 
 /* Pienemmillä näytöillä säädetään perusyksikköä hieman pienemmäksi */
 @media (max-width: 500px) {
@@ -47,3 +76,8 @@ body {
         font-size: 55%;
     }
 }
+
+/* ---------------------------------
+   Pienemmät näytöt
+   - Säädetään perusyksikköä pienemmille näytöille parempaa luettavuutta varten
+----------------------------------*/
