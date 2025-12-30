@@ -1,6 +1,6 @@
 {
   "name": "calendar-app",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "private": true,
   "description": "Kalenteri",
   "homepage": "https://github.com/JariCode/calendar-app#readme",
@@ -43,7 +43,7 @@
     "wait-on": "^7.0.1"
   },
   "build": {
-    "icon": "calendar.png",
+    "icon": "calendar.ico",
     "appId": "com.example.react-desktop",
     "productName": "Kalenteri",
     "directories": {
@@ -53,7 +53,7 @@
       "dist/**/*",
       "main.cjs",
       "preload.js",
-      "calendar.png"
+      "calendar.ico"
     ],
     "mac": {
       "target": [
