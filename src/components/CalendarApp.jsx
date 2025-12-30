@@ -152,7 +152,7 @@ const CalendarApp = () => {
 
     const handleEventEdit = (event) => {
         setSelectedDate(new Date(event.date))
-        // Prefill start time only if event has one (optional)
+        // Tapauksessa, jossa tapahtumalla on aika, asetetaan se lomakkeeseen; muuten tyhjä
         if (event.time) {
             setEventTime({
                 hours: event.time.split(':')[0],
@@ -161,7 +161,7 @@ const CalendarApp = () => {
         } else {
             setEventTime({ hours: '', minutes: '' });
         }
-        // If event has endTime, populate; otherwise leave empty (optional)
+        // Tapauksessa, jossa tapahtumalla on loppuaika, asetetaan se lomakkeeseen; muuten tyhjä
         if (event.endTime) {
             setEventEndTime({
                 hours: event.endTime.split(':')[0],
@@ -211,7 +211,7 @@ const CalendarApp = () => {
         setEventEndDate(base);
     }
 
-    // --- Persistence: load from Electron IPC or localStorage, save debounced ---
+    // Ladataan tapahtumat Electronin IPC:n kautta tai localStoragesta komponentin latautuessa
     const saveTimer = useRef(null);
 
     useEffect(() => {
@@ -233,7 +233,7 @@ const CalendarApp = () => {
                 console.error('Electron load failed:', err);
             }
 
-            // Only use localStorage fallback when NOT running inside Electron (web build)
+            // Käytetään localStoragea varalta jos Electron API ei ole saatavilla
             if (!window?.electronAPI?.loadEvents) {
                 try {
                     const raw = localStorage.getItem('calendarEvents');
@@ -254,7 +254,7 @@ const CalendarApp = () => {
     }, []);
 
     useEffect(() => {
-        // always save to localStorage as a fallback/persistence for web
+        // Ainakin localStorageen tallennus heti
         try {
             const serializable = events.map(e => ({ ...e,
                 date: e.date instanceof Date ? e.date.toISOString() : e.date,
@@ -266,7 +266,7 @@ const CalendarApp = () => {
             console.error('localStorage save failed:', err);
         }
 
-        // If Electron available, save via IPC debounced
+        // Jos Electron API on saatavilla, käytetään sitä tallennukseen
         if (!window?.electronAPI?.saveEvents) return;
 
         if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -288,8 +288,8 @@ const CalendarApp = () => {
         }
     }, [events]);
 
-    // Graceful shutdown: register a handler invoked by main when it's about
-    // to close the window. We save asynchronously and then signal readiness.
+    // Suljettaessa ikkuna: rekisteröidään käsittelijä, jonka main-prosessi kutsuu.
+    // Tallennamme asynkronisesti ja ilmoitamme valmiudesta.
     const eventsRef = useRef(events);
     useEffect(() => { eventsRef.current = events; }, [events]);
 
@@ -393,10 +393,10 @@ const CalendarApp = () => {
                     <input type="number" name="year" min={1970} max={9999} className="year-input" placeholder="vvvv" value={eventEndDate ? String(eventEndDate.getFullYear()) : ''} onChange={handleEndDatePartChange} />
                 </div>
             </div>
-            {/* Tapahtuman teksti (max 60 merkkiä) */}
-            <textarea placeholder="Kirjoita tapahtuman teksti (enintään 60 merkkiä)" value={eventText} 
+            {/* Tapahtuman teksti (max 100 merkkiä) */}
+            <textarea placeholder="Kirjoita tapahtuman teksti (enintään 100 merkkiä)" value={eventText} 
             onChange={(e) => {
-                if(e.target.value.length <= 60) {
+                if(e.target.value.length <= 100) {
                     setEventText(e.target.value);
                 }
             }}>

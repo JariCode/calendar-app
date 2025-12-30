@@ -174,7 +174,8 @@ function buildMenu() {
       ]
     }] : []),
 
-    // Tiedosto-valikko: Sulje-commando (CmdOrCtrl+W) sulkee ikkunan
+    // Tiedosto-valikko: sulje ikkuna
+    //Macissa kommentoidaan pois Tiedosto ja sulje, koska se on jo sovellusvalikossa.
     {
       label: 'Tiedosto',
       submenu: [
