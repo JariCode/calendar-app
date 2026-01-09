@@ -102,20 +102,32 @@ const CalendarApp = () => {
     const handleEventSubmit = () => {
         const startDate = new Date(selectedDate);
         const startTimeMinutes = (parseInt(eventTime.hours || '0', 10) * 60) + parseInt(eventTime.minutes || '0', 10);
-        // Determine whether user provided an end time (optional)
+        // Determine whether user provided an end date and/or end time (both optional)
+        const hasEndDate = !!eventEndDate;
         const hasEndTime = (eventEndTime.hours !== '' || eventEndTime.minutes !== '');
         let endDateFinal = null;
         let endTimeFinal = null;
 
-        if (hasEndTime) {
-            let endDateObj = eventEndDate ? new Date(eventEndDate) : new Date(startDate);
-            const endTimeMinutes = (parseInt(eventEndTime.hours || '0', 10) * 60) + parseInt(eventEndTime.minutes || '0', 10);
-            // If end is before start, snap end to start
-            if (endDateObj < startDate || (endDateObj.getTime() === startDate.getTime() && endTimeMinutes < startTimeMinutes)) {
-                endDateObj = new Date(startDate);
+        if (hasEndDate || hasEndTime) {
+            // Use provided end date if available, otherwise default to start date
+            let endDateObj = hasEndDate ? new Date(eventEndDate) : new Date(startDate);
+
+            if (hasEndTime) {
+                const endTimeMinutes = (parseInt(eventEndTime.hours || '0', 10) * 60) + parseInt(eventEndTime.minutes || '0', 10);
+                // If end datetime would be before start datetime, snap end to start
+                if (endDateObj < startDate || (endDateObj.getTime() === startDate.getTime() && endTimeMinutes < startTimeMinutes)) {
+                    endDateObj = new Date(startDate);
+                }
+                endTimeFinal = `${String(eventEndTime.hours).padStart(2, '0')}:${String(eventEndTime.minutes).padStart(2, '0')}`;
+            } else {
+                // No end time provided: ensure end date is not before start date
+                if (endDateObj < startDate) {
+                    endDateObj = new Date(startDate);
+                }
+                endTimeFinal = null;
             }
+
             endDateFinal = endDateObj;
-            endTimeFinal = `${String(eventEndTime.hours).padStart(2, '0')}:${String(eventEndTime.minutes).padStart(2, '0')}`;
         }
 
         const hasStartTime = (eventTime.hours !== '' || eventTime.minutes !== '');
@@ -161,16 +173,20 @@ const CalendarApp = () => {
         } else {
             setEventTime({ hours: '', minutes: '' });
         }
-        // Tapauksessa, jossa tapahtumalla on loppuaika, asetetaan se lomakkeeseen; muuten tyhjä
+        // Asetetaan loppupäivä ja loppuaika lomakkeeseen, myös kun on vain loppupäivä ilman aikaa
+        if (event.endDate) {
+            setEventEndDate(event.endDate ? new Date(event.endDate) : new Date(event.date));
+        } else {
+            setEventEndDate(null);
+        }
+
         if (event.endTime) {
             setEventEndTime({
                 hours: event.endTime.split(':')[0],
                 minutes: event.endTime.split(':')[1]
             });
-            setEventEndDate(event.endDate ? new Date(event.endDate) : new Date(event.date));
         } else {
             setEventEndTime({ hours: '', minutes: '' });
-            setEventEndDate(null);
         }
         setEventText(event.text);
         setEditingEvent(event);
@@ -435,10 +451,15 @@ const CalendarApp = () => {
                     {/** If end date exists and is different day -> show start date/time and end date/time on separate rows with dashes */}
                     {end && !sameDay && (
                         <>
-                            <div className="event-date">{`${monthsOfYear[start.getMonth()]} ${start.getDate()}, ${start.getFullYear()}`}</div>
-                            <div className="event-time">{event.time ? `${event.time}-` : ''}</div>
+                            <div className="event-date">
+                                {`${monthsOfYear[start.getMonth()]} ${start.getDate()}, ${start.getFullYear()}`}
+                                {!(event.time && event.endTime) ? ' -' : ''}
+                            </div>
+                            <div className="event-time">
+                                {event.time ? `${event.time}${event.endTime ? ' -' : ''}` : ''}
+                            </div>
                             <div className="event-date">{`${monthsOfYear[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`}</div>
-                            <div className="event-time">{event.endTime ? `-${event.endTime}` : ''}</div>
+                            <div className="event-time">{event.endTime ? `${event.endTime}` : ''}</div>
                         </>
                     )}
                 </div>
