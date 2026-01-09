@@ -377,9 +377,10 @@
 .event-date-wrapper {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     width: 25%;
     border-right: 0.08rem solid rgba(255,255,255,0.04);
+    padding-left: 1rem;
 }
 
 /* ---------------------------------
@@ -390,6 +391,8 @@
 .event-date {
     font-size: clamp(1rem, 1cqi, 1.2rem);
     color: #f3f9ff;
+    width: 100%;
+    text-align: left;
 }
 
 .event-time {
@@ -397,6 +400,8 @@
     line-height: 4rem;
     color: #fbfcff;
     font-weight: bold;
+    width: 100%;
+    text-align: left;
 }
 
 .event-text {
